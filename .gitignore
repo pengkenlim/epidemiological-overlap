@@ -209,6 +209,11 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Real data (keep local files out of git)
+data/real/
+# Generated workflow outputs from local test runs
+data/testout/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

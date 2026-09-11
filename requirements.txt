@@ -1,0 +1,13 @@
+dateparser==1.4.3
+DateTime==6.0
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+pytz==2026.3.post1
+regex==2026.9.10
+six==1.17.0
+tzlocal==5.4.4
+zope.interface==8.6

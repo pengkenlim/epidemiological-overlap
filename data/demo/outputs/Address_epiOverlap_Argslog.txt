@@ -1,0 +1,5 @@
+isolate_DOC: ./data/demo/inputs/Isolate_DOC_decimal.tsv
+isolate_patient_mapping: ./data/demo/inputs/Isolate-patient_ID_mapping.tsv
+patient_address: ./data/demo/inputs/Patient_addresses.tsv
+isolate_pairs: ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv
+output_folder: ./data/demo/outputs
