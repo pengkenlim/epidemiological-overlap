@@ -10,7 +10,12 @@ https://github.com/nataschamay/cp_transmission_2021
 
 This repository contains a small analysis workflow for comparing isolate pairs against patient metadata and generating epidemiological overlap outputs.
 
-The main workflow script is [tools/Address_epiOverlap.py](tools/Address_epiOverlap.py). It reads a set of TSV inputs, resolves isolate-to-patient mappings, compares patient addresses, and writes output files summarising overlap events and per-pair status.
+There are two main workflow scripts:
+
+- [tools/Address_epiOverlap.py](tools/Address_epiOverlap.py): compares isolate pairs by patient address information.
+- [tools/Discipline_epiOverlap.py](tools/Discipline_epiOverlap.py): compares isolate pairs by  discipline overlap between hospital stays of patients.
+
+The repository also includes a small comparison workflow used to validate the discipline output against an independent reference set.
 
 ## Environment setup
 
@@ -42,7 +47,7 @@ python ./tools/Address_epiOverlap.py \
   --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
   --patient_address ./data/demo/inputs/Patient_addresses.tsv \
   --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
-  --output_folder ./data/testout
+  --output_folder ./data/demo/outputs
 ```
 
 This writes files such as:
@@ -53,16 +58,52 @@ This writes files such as:
 
 into the output folder you specify.
 
+## Finding discipline overlap
+
+### Check the CLI usage
+
+```bash
+python ./tools/Discipline_epiOverlap.py --help
+```
+
+This shows the required arguments for thediscipline overlap analysis.
+
+### Run the analysis
+
+```bash
+python ./tools/Discipline_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_admission_details ./data/demo/inputs/Patient_admission_details.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs
+```
+
+Optional decimal-date output:
+
+```bash
+python ./tools/Discipline_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_admission_details ./data/demo/inputs/Patient_admission_details.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs_decimal \
+  --decimal_date
+```
+
 ### Input and output files
 
-The script reads TSV files by column position, not by exact header names. For the default schema and detailed file descriptions, see:
+The scripts read TSV files by column position, not by exact header names. For the default schema and detailed file descriptions, see:
 
 - [Isolate_DOC_decimal.tsv](data/README.md#isolate_doc_decimaltsv)
 - [Isolate-patient_ID_mapping.tsv](data/README.md#isolate-patient_id_mappingtsv)
 - [Patient_addresses.tsv](data/README.md#patient_addressestsv)
+- [Patient_admission_details.tsv](data/README.md#patient_admission_detailstsv)
 - [Recipient-donor_isolate_pairs.tsv](data/README.md#recipient-donor_isolate_pairstsv)
 - [Address_epiOverlap_events.tsv](data/README.md#address_epioverlap_eventstsv)
 - [Address_epiOverlap_statuses_all_pairs.tsv](data/README.md#address_epioverlap_statuses_all_pairstsv)
+- [Discipline_epiOverlap_events.tsv](data/README.md#discipline_epioverlap_eventstsv)
+- [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
 
 ## Custom column order
 

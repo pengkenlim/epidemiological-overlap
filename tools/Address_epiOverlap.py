@@ -226,6 +226,19 @@ def parse_date_string(date_str: str, slash_format: str | None = None, hyphen_for
     if date_str.lower() in {"", "n.a", "na", "nan", "null"}:
         return None
 
+    try:
+        decimal_year = float(date_str)
+        if "." in date_str and not date_str.startswith(("+", "-")):
+            year = int(decimal_year)
+            fraction = decimal_year - year
+            leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+            days_in_year = 366 if leap_year else 365
+            day_of_year = int(round(fraction * days_in_year))
+            day_of_year = max(1, min(day_of_year, days_in_year))
+            return date(year, 1, 1) + timedelta(days=day_of_year - 1)
+    except ValueError:
+        pass
+
     if "/" in date_str:
         if slash_format is not None:
             try:
@@ -259,17 +272,7 @@ def parse_date_string(date_str: str, slash_format: str | None = None, hyphen_for
     except (TypeError, ValueError):
         pass
 
-    try:
-        decimal_year = float(date_str)
-        year = int(decimal_year)
-        fraction = decimal_year - year
-        leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
-        days_in_year = 366 if leap_year else 365
-        day_of_year = int(round(fraction * days_in_year))
-        day_of_year = max(1, min(day_of_year, days_in_year))
-        return date(year, 1, 1) + timedelta(days=day_of_year - 1)
-    except ValueError:
-        return None
+    return None
 
 
 def build_parser() -> argparse.ArgumentParser:

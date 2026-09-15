@@ -1,0 +1,9 @@
+Recip_isolate_ID	Donor_isolate_ID	Recip_patient_ID	Donor_patient_ID	Direct_exact_discipline_contact	Direct_partial_discipline_contact	Indirect_discipline_contact	No_discipline_contact	Date_OOR
+ISO201	ISO203	PID101	PID103					Date_OOR
+ISO202	ISO205	PID102	PID105					Date_OOR
+ISO206	ISO208	PID106	PID108					Date_OOR
+ISO207	ISO210	PID107	PID110					Date_OOR
+ISO203	ISO201	PID103	PID101					Date_OOR
+ISO205	ISO202	PID105	PID102					Date_OOR
+ISO208	ISO206	PID108	PID106			Discipline Indirect		
+ISO210	ISO207	PID110	PID107				No Discipline Contact	

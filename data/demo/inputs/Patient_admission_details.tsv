@@ -1,0 +1,12 @@
+Patient_ID	Age	Gender	Admission Date	Discharge Date	Admission Hospital	Ward	Bed	Discipline	Start Date	Stop Date
+PID101	45	M	2020-01-01	2020-01-10	Hospital A	Ward 1	Bed 5	Cardiology	2020-01-01	2020-01-05
+PID101	45	M	2020-03-10	2020-03-18	Hospital A	Ward 2	Bed 12	Cardiology	2020-03-10	2020-03-18
+PID102	60	F	2020-02-01	2020-02-15	Hospital B	Ward 2	Bed 10	Neurology	2020-02-01	2020-02-10
+PID103	28	F	2010-09-01	2010-09-30	Hospital A	Ward 1	Bed 8	Medicine	2010-09-01	2010-09-30
+PID104	33	M	2011-01-10	2011-01-30	Hospital A	Ward 4	Bed 3	Medicine	2011-01-11	2011-01-26
+PID105	41	M	2011-01-20	2011-02-05	Hospital B	Ward 1	Bed 7	Neurology	2011-01-25	2011-02-03
+PID106	52	F	2011-02-10	2011-02-28	Hospital A	Ward 3	Bed 9	Cardiology	2011-02-12	2011-02-26
+PID107	61	F	2011-03-01	2011-03-20	Hospital C	Ward 5	Bed 2	Surgery	2011-03-02	2011-03-15
+PID108	19	M	2011-03-11	2011-03-25	Hospital A	Ward 3	Bed 6	Cardiology	2011-03-12	2011-03-21
+PID109	35	M	2011-04-05	2011-04-22	Hospital A	Ward 6	Bed 11	Medicine	2011-04-06	2011-04-18
+PID110	48	F	2011-06-18	2011-07-02	Hospital D	Ward 7	Bed 4	Surgery	2011-06-18	2011-06-30
