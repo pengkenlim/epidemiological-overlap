@@ -2,7 +2,7 @@
 Procedure_epiOverlap.py.
 
 Description:
-    Script for computing procedure epidemiological overlap based on patient admission data.
+    Script for computing procedure epidemiological overlap based on patient procedure data.
 
 Author:
     Peng Ken Lim
@@ -39,22 +39,14 @@ Running instructions:
                 ISO201    PID101
                 ISO202    PID102
 
-        --patient_admission_details:
+        --patient_procedure_details:
             Patient_ID: Column 1
-            Age: Column 2
-            Gender: Column 3
-            Admission Date: Column 4
-            Discharge Date: Column 5
-            Admission Hospital: Column 6
-            Ward: Column 7
-            Bed: Column 8
-            Discipline: Column 9
-            Start Date: Column 10
-            Stop Date: Column 11
-
+            Hospital: Column 2
+            Procedure columns: Columns 3 onward
+            Each procedure column corresponds to a procedure type and stores one or more dates.
             Example rows:
-                PID101    45    M    2020-01-01    2020-01-10    Hospital A    Ward 1    Bed 5    Cardiology    2020-01-01    2020-01-05
-                PID102    60    F    2020-02-01    2020-02-15    Hospital B    Ward 2    Bed 10    Neurology    2020-02-01    2020-02-10
+                PID101    Hospital A    2010-09-06    2010-09-11,2010-09-12    2010-09-18
+                PID102    Hospital B            2011-02-01
 
         --isolate_pairs:
             Recip_isolate_ID: Column 1
@@ -65,24 +57,22 @@ Running instructions:
 
     The parser reads these files based on expected column orders and does not require the literal header names to match exactly.
     You can provide files with different header names as long as the column order matches the expected order.
-    Additionally, you can specify the columns explicitly (refer to usage information below).
+    The procedure-details file follows the fixed layout Patient_ID, Hospital, then one or more procedure columns.
 
     Command proper:
         python ./tools/Procedure_epiOverlap.py [options]
         options:
             --isolate_DOC                 Path to the isolate Date-of-culture TSV. Expected column order: 1,2 --> Isolate_ID, Date of Culture (DOC)
             --isolate_patient_mapping     Path to the isolate-to-patient mapping TSV. Expected column order: 1,2 --> Isolate_ID, Patient_ID.
-            --patient_procedure_details   Path to the patient procedure details TSV. Expected column order: 1,2,3,4,5,6,7,8,9,10,11 --> Patient_ID, Age, Gender, Admission Date, Discharge Date, Admission Hospital, Ward, Bed, Discipline, Start Date, Stop Date.
+            --patient_procedure_details   Path to the patient procedure details TSV. Expected column order: 1,2,... --> Patient_ID, Hospital, followed by one or more procedure date columns.
             --isolate_pairs               Path to the isolate pair TSV. Expected column order: 1,2 --> Recip_isolate_ID, Donor_isolate_ID.
+            --decimal_date                Write output dates in decimal-year format instead of ISO YYYY-MM-DD.
             --output_folder               Path to the output directory for generated TSV files.
             --help                        Show this help message and exit.
 
         additional information:
-            You can override the default column order of all input files by specifying the columns explicitly in their corresponding argument flags
-            for e.g,
-                ---patient_procedure_details /path/to/file.tsv[1,2,3,4,5,6,7,8,9,10,11]
-                implies the following:
-                Placeholder
+            The procedure details file does not support explicit column-order overrides because the first two columns are fixed as Patient_ID and Hospital,
+            while the remaining columns are procedure-specific and are matched by procedure name.
 Dependencies:
     - os
     - sys
@@ -326,12 +316,12 @@ def build_parser() -> argparse.ArgumentParser:
         description=(
             "Compute epidemiological overlap of isolate transmission based on "
             "patient procedure data.\n\n"
-            "Expected column order (not exact header-name matching):\n"
+            "Expected structure (by position):\n"
             "  --isolate_DOC: Isolate_ID, Date of Culture (DOC)\n"
             "  --isolate_patient_mapping: Isolate_ID, Patient_ID\n"
-            "  --patient_procedure_details: Patient_ID, Procedure Hospital, Procedure Type 1, Procedure Type 2, ...\n"
+            "  --patient_procedure_details: Patient_ID, Hospital, followed by one or more procedure-date columns\n"
             "  --isolate_pairs: Recip_isolate_ID, Donor_isolate_ID\n\n"
-            "The procedure details file does not support explicit column-order overrides."
+            "The procedure details file is positional and expects the first two columns to be Patient_ID and Hospital."
         )
     )
     parser.add_argument(
@@ -357,14 +347,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--patient_procedure_details",
-        "--patient_admission_details",
         dest="patient_procedure_details",
         type=str,
         required=True,
         help=(
             "Path to the patient procedure-details TSV. "
-            "Expected column order: Patient_ID, Procedure Hospital, Procedure Type columns, each with a date value. "
-            "This tool does not support column-order overrides."
+            "Expected structure: Patient_ID, Hospital, followed by one or more procedure columns. "
+            "The first two columns are fixed as Patient_ID and Hospital; later columns are procedure-specific and contain dates. "
+            "This tool does not support explicit column-order overrides."
         ),
     )
     parser.add_argument(

@@ -14,9 +14,12 @@
     1. `Isolate_ID`
     2. `Date of Culture (DOC)`
 * Example rows:
-    * `ISO201    2010-09-06`
-    * `ISO202    2010.682192`
-    * `ISO203    06/09/2010`
+
+| Isolate_ID | Date of Culture (DOC) |
+| --- | --- |
+| ISO201 | 2010-09-06 |
+| ISO202 | 2010.682192 |
+| ISO203 | 06/09/2010 |
 
 ### Isolate-patient_ID_mapping.tsv
 * Description:
@@ -31,8 +34,11 @@
     1. `Isolate_ID`
     2. `Patient_ID`
 * Example rows:
-    * `ISO201    PID101`
-    * `ISO202    PID102`
+
+| Isolate_ID | Patient_ID |
+| --- | --- |
+| ISO201 | PID101 |
+| ISO202 | PID102 |
 
 ### Patient_addresses.tsv
 * Description:
@@ -47,11 +53,15 @@
     3. `Unit number`
     4. `Row Number`
 * Example rows:
-    * `PID101    123456    05-07    6`
-    * `PID102    654321    3-110    7`
+
+| Patient_ID | Postal code | Unit number | Row Number |
+| --- | --- | --- | --- |
+| PID101 | 123456 | 05-07 | 6 |
+| PID102 | 654321 | 3-110 | 7 |
 
 ### Patient_admission_details.tsv
-* Description:metadata used by the discipline and admission workflows.
+* Description:
+    * A patient-level admission table containing age, sex, admission/discharge dates, hospital, ward, bed, and discipline metadata used by the discipline and admission workflows.
 * Input for:
     * tools/Discipline_epiOverlap.py
     * tools/Adm_epiOverlap.py
@@ -69,8 +79,11 @@
     10. `Start Date`
     11. `Stop Date`
 * Example rows:
-    * `PID101    45    M    2020-01-01    2020-01-10    Hospital A    Ward 1    Bed 5    Cardiology    2020-01-01    2020-01-05`
-    * `PID102    60    F    2020-02-01    2020-02-15    Hospital B    Ward 2    Bed 10    Neurology    2020-02-01    2020-02-10`
+
+| Patient_ID | Age | Gender | Admission Date | Discharge Date | Admission Hospital | Ward | Bed | Discipline | Start Date | Stop Date |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PID101 | 45 | M | 2020-01-01 | 2020-01-10 | Hospital A | Ward 1 | Bed 5 | Cardiology | 2020-01-01 | 2020-01-05 |
+| PID102 | 60 | F | 2020-02-01 | 2020-02-15 | Hospital B | Ward 2 | Bed 10 | Neurology | 2020-02-01 | 2020-02-10 |
 
 ### Patient_hospital_procedures.tsv
 * Description:
@@ -83,14 +96,13 @@
 * Expected columns (by position):
     1. `Patient_ID`
     2. `Hospital`
-    3..N. One or more procedure columns, each named after a procedure type and containing date values for that procedure.
+    3. 3rd column onwards: One or more procedure columns, each named after a procedure type and containing date values for that procedure.
 * Example rows:
-    * `PID101    Hospital A    OGD: 2010-09-06    Colonoscopy: 2010-09-11`
-    * `PID102    Hospital B    OGD: 2011-01-20    Colonoscopy: 2011-02-01`
-* Example TSV layout:
-    * `Patient_ID    Hospital    OGD    Colonoscopy    ERCP`
-    * `PID101    Hospital A    2010-09-06    2010-09-11    2010-09-18`
-    * `PID102    Hospital B    2011-01-20    2011-02-01    `
+
+| Patient_ID | Hospital | OGD | Colonoscopy | ERCP |
+| --- | --- | --- | --- | --- |
+| PID101 | Hospital A | 2010-09-06 | 2010-09-11,2010-09-12 | 2010-09-18 |
+| PID102 | Hospital B |  | 2011-02-01 |  |
 
 ### Recipient-donor_isolate_pairs.tsv
 * Description:
@@ -105,8 +117,11 @@
     1. `Recip_isolate_ID`
     2. `Donor_isolate_ID`
 * Example rows:
-    * `ISO201    ISO203`
-    * `ISO202    ISO205`
+
+| Recip_isolate_ID | Donor_isolate_ID |
+| --- | --- |
+| ISO201 | ISO203 |
+| ISO202 | ISO205 |
 
 ## Descriptions of output data
 

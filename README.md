@@ -19,6 +19,21 @@ There are four main workflow scripts:
 
 The repository also includes comparison scripts used to validate the generated overlap outputs against independent reference sets.
 
+## Table of contents
+
+- [Overview](#overview)
+- [Environment setup](#environment-setup)
+- [How the analysis pipeline works](#how-the-analysis-pipeline-works)
+- [Input and Output Files](#input-and-output-files)
+- [Finding address overlap](#finding-address-overlap)
+- [Finding discipline overlap](#finding-discipline-overlap)
+- [Finding admission overlap](#finding-admission-overlap)
+- [Finding procedure overlap](#finding-procedure-overlap)
+- [Custom column order](#custom-column-order)
+- [Testing and validation](#testing-and-validation)
+
+
+
 ## Environment setup
 
 Create and activate a virtual environment, then install the project dependencies:
@@ -30,6 +45,49 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+## How the analysis pipeline works
+
+The scripts share the same general workflow:
+
+1. Load the recipient/donor isolate pair list.
+2. Resolve each isolate to a patient using the isolate-to-patient mapping.
+3. Read patient-level metadata such as address, admission history, or procedure history.
+4. Compare the relevant metadata for each pair.
+5. Write:
+   - an event-level table of overlapping records
+   - a pair-level status table summarising each donor/recipient comparison
+   - an argument log capturing the exact CLI configuration used
+
+The project is intentionally schema-driven rather than header-driven. Input files are parsed primarily by column position, which makes it easier to work with TSVs that have variable header names or non-standard layouts.
+
+Date handling is also standardized across workflows. The parsing logic accepts ISO dates, decimal-year dates, slash-delimited dates, and hyphen-delimited dates, with the CLI option `--decimal_date` used to request decimal-year output formatting when relevant.
+
+## Input and Output Files
+### Input files
+
+The scripts read TSV files by column position, not by exact header names. For the default schema and detailed file descriptions, see:
+
+- [Isolate_DOC_decimal.tsv](data/README.md#isolate_doc_decimaltsv)
+- [Isolate-patient_ID_mapping.tsv](data/README.md#isolate-patient_id_mappingtsv)
+- [Patient_addresses.tsv](data/README.md#patient_addressestsv)
+- [Patient_admission_details.tsv](data/README.md#patient_admission_detailstsv)
+- [Patient_hospital_procedures.tsv](data/README.md#patient_hospital_procedurestsv)
+- [Recipient-donor_isolate_pairs.tsv](data/README.md#recipient-donor_isolate_pairstsv)
+
+### Output files
+
+The scripts generate event and status tables in the output folder. See the detailed descriptions for:
+
+- [Address_epiOverlap_events.tsv](data/README.md#address_epioverlap_eventstsv)
+- [Address_epiOverlap_statuses_all_pairs.tsv](data/README.md#address_epioverlap_statuses_all_pairstsv)
+- [Discipline_epiOverlap_events.tsv](data/README.md#discipline_epioverlap_eventstsv)
+- [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
+- [Adm_epiOverlap_events.tsv](data/README.md#adm_epioverlap_eventstsv)
+- [Adm_epiOverlap_statuses_all_pairs.tsv](data/README.md#adm_epioverlap_statuses_all_pairstsv)
+- [Procedure_epiOverlap_events.tsv](data/README.md#procedure_epioverlap_eventstsv)
+- [Procedure_epiOverlap_statuses_all_pairs.tsv](data/README.md#procedure_epioverlap_statuses_all_pairstsv)
+
 
 ## Finding address overlap
 
@@ -126,30 +184,6 @@ python ./tools/Adm_epiOverlap.py \
   --decimal_date
 ```
 
-### Input files
-
-The scripts read TSV files by column position, not by exact header names. For the default schema and detailed file descriptions, see:
-
-- [Isolate_DOC_decimal.tsv](data/README.md#isolate_doc_decimaltsv)
-- [Isolate-patient_ID_mapping.tsv](data/README.md#isolate-patient_id_mappingtsv)
-- [Patient_addresses.tsv](data/README.md#patient_addressestsv)
-- [Patient_admission_details.tsv](data/README.md#patient_admission_detailstsv)
-- [Patient_hospital_procedures.tsv](data/README.md#patient_hospital_procedurestsv)
-- [Recipient-donor_isolate_pairs.tsv](data/README.md#recipient-donor_isolate_pairstsv)
-
-### Output files
-
-The scripts generate event and status tables in the output folder. See the detailed descriptions for:
-
-- [Address_epiOverlap_events.tsv](data/README.md#address_epioverlap_eventstsv)
-- [Address_epiOverlap_statuses_all_pairs.tsv](data/README.md#address_epioverlap_statuses_all_pairstsv)
-- [Discipline_epiOverlap_events.tsv](data/README.md#discipline_epioverlap_eventstsv)
-- [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
-- [Adm_epiOverlap_events.tsv](data/README.md#adm_epioverlap_eventstsv)
-- [Adm_epiOverlap_statuses_all_pairs.tsv](data/README.md#adm_epioverlap_statuses_all_pairstsv)
-- [Procedure_epiOverlap_events.tsv](data/README.md#procedure_epioverlap_eventstsv)
-- [Procedure_epiOverlap_statuses_all_pairs.tsv](data/README.md#procedure_epioverlap_statuses_all_pairstsv)
-
 ## Finding procedure overlap
 
 ### Check the CLI usage
@@ -200,8 +234,28 @@ python ./tools/Address_epiOverlap.py \
 
 In this example, the parser reads the specified numeric columns in the order shown before processing the file. This lets you keep the same script logic even when the input files use different column layouts or alternate header names.
 
+## Testing and validation
+
+The repository includes regression tests under the `tests/` directory for the main epidemiological overlap workflows. These are designed to check that the core logic remains consistent as the input schemas and date-handling rules evolve.
+
+A typical validation run is:
+
+```bash
+pytest -q
+```
+
+You can also run a single workflow test, for example:
+
+```bash
+pytest -q tests/Address_epiOverlap_test.py
+```
+
+The demo datasets under `data/demo/inputs` and `data/demo/outputs` are useful for smoke testing the full end-to-end flow before running on real data.
+
 ## Notes
 
 - Missing values such as `n.a` or blank cells are treated as absent where applicable.
 - Date values can include standard ISO formats, slash-delimited dates, hyphen-delimited dates, and decimal-year values.
-- The script is intended for TSV inputs and assumes a header row is present, but it does not rely on exact header names.
+- The scripts are intended for TSV inputs and assume a header row is present, but they do not rely on exact header names.
+- The workflow is designed to compare donor/recipient isolate pairs, then write both event-level evidence and summary-level status tables for each pair.
+- If you are working with a custom file layout, use the positional override syntax described in the section below to select the correct columns without rewriting the script logic.
