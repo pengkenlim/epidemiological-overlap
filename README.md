@@ -10,11 +10,12 @@ https://github.com/nataschamay/cp_transmission_2021
 
 This repository contains a small analysis workflow for comparing isolate pairs against patient metadata and generating epidemiological overlap outputs.
 
-There are three main workflow scripts:
+There are four main workflow scripts:
 
 - [tools/Address_epiOverlap.py](tools/Address_epiOverlap.py): compares isolate pairs by patient address information.
 - [tools/Discipline_epiOverlap.py](tools/Discipline_epiOverlap.py): compares isolate pairs by discipline overlap between hospital stays of patients.
 - [tools/Adm_epiOverlap.py](tools/Adm_epiOverlap.py): compares isolate pairs by hospital, ward, and bed overlap between hospital stays of patients.
+- [tools/Procedure_epiOverlap.py](tools/Procedure_epiOverlap.py): compares isolate pairs by procedure overlap based on patient procedure records.
 
 The repository also includes comparison scripts used to validate the generated overlap outputs against independent reference sets.
 
@@ -133,6 +134,7 @@ The scripts read TSV files by column position, not by exact header names. For th
 - [Isolate-patient_ID_mapping.tsv](data/README.md#isolate-patient_id_mappingtsv)
 - [Patient_addresses.tsv](data/README.md#patient_addressestsv)
 - [Patient_admission_details.tsv](data/README.md#patient_admission_detailstsv)
+- [Patient_hospital_procedures.tsv](data/README.md#patient_hospital_procedurestsv)
 - [Recipient-donor_isolate_pairs.tsv](data/README.md#recipient-donor_isolate_pairstsv)
 
 ### Output files
@@ -145,6 +147,41 @@ The scripts generate event and status tables in the output folder. See the detai
 - [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
 - [Adm_epiOverlap_events.tsv](data/README.md#adm_epioverlap_eventstsv)
 - [Adm_epiOverlap_statuses_all_pairs.tsv](data/README.md#adm_epioverlap_statuses_all_pairstsv)
+- [Procedure_epiOverlap_events.tsv](data/README.md#procedure_epioverlap_eventstsv)
+- [Procedure_epiOverlap_statuses_all_pairs.tsv](data/README.md#procedure_epioverlap_statuses_all_pairstsv)
+
+## Finding procedure overlap
+
+### Check the CLI usage
+
+```bash
+python ./tools/Procedure_epiOverlap.py --help
+```
+
+This shows the required arguments for the procedure overlap analysis.
+
+### Run the analysis
+
+```bash
+python ./tools/Procedure_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_procedure_details ./data/demo/inputs/Patient_hospital_procedures.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs
+```
+
+Optional decimal-date output:
+
+```bash
+python ./tools/Procedure_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_procedure_details ./data/demo/inputs/Patient_hospital_procedures.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs_decimal \
+  --decimal_date
+```
 
 ## Custom column order
 

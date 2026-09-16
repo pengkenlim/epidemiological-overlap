@@ -1,0 +1,23 @@
+Overlap_event_type	Recip_patient_ID	Recip_isolate_ID	Recip_isolate_DOC	Recip_procedure_hospital	Recip_procedure	Recip_procedure_date	Donor_patient_ID	Donor_isolate_ID	Donor_isolate_DOC	Donor_procedure_hospital	Donor_procedure	Donor_procedure_date
+Procedure Direct	PID101	ISO201	2010-09-06	Hospital A	OGD	2010-09-06	PID103	ISO203	2010-09-06	Hospital A	OGD	2010-09-06
+Procedure Direct	PID103	ISO203	2010-09-06	Hospital A	OGD	2010-09-06	PID101	ISO201	2010-09-06	Hospital A	OGD	2010-09-06
+Procedure Indirect	PID105	ISO205	2011-02-05	Hospital B	OGD	2011-01-25	PID102	ISO202	2010-09-06	Hospital B	OGD	2011-01-20
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Colonoscope	2011-02-02	PID102	ISO202	2010-09-06	Hospital B	OGD	2011-01-20
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Appendicectomy	2011-01-30	PID102	ISO202	2010-09-06	Hospital B	OGD	2011-01-20
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Laparoscopy	2011-02-04	PID102	ISO202	2010-09-06	Hospital B	OGD	2011-01-20
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	OGD	2011-01-25	PID102	ISO202	2010-09-06	Hospital B	Colonoscope	2011-02-01
+Procedure Indirect	PID105	ISO205	2011-02-05	Hospital B	Colonoscope	2011-02-02	PID102	ISO202	2010-09-06	Hospital B	Colonoscope	2011-02-01
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Appendicectomy	2011-01-30	PID102	ISO202	2010-09-06	Hospital B	Colonoscope	2011-02-01
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Laparoscopy	2011-02-04	PID102	ISO202	2010-09-06	Hospital B	Colonoscope	2011-02-01
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	OGD	2011-01-25	PID102	ISO202	2010-09-06	Hospital B	Appendicectomy	2011-01-28
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Colonoscope	2011-02-02	PID102	ISO202	2010-09-06	Hospital B	Appendicectomy	2011-01-28
+Procedure Indirect	PID105	ISO205	2011-02-05	Hospital B	Appendicectomy	2011-01-30	PID102	ISO202	2010-09-06	Hospital B	Appendicectomy	2011-01-28
+No Procedure Contact	PID105	ISO205	2011-02-05	Hospital B	Laparoscopy	2011-02-04	PID102	ISO202	2010-09-06	Hospital B	Appendicectomy	2011-01-28
+No Procedure Contact	PID108	ISO208	2011-04-01	Hospital A	OGD	2011-03-12	PID106	ISO206	2011-02-16	Hospital A	Colonoscope	2011-02-19
+Procedure Indirect	PID108	ISO208	2011-04-01	Hospital A	Colonoscope	2011-03-18	PID106	ISO206	2011-02-16	Hospital A	Colonoscope	2011-02-19
+No Procedure Contact	PID108	ISO208	2011-04-01	Hospital A	ERCP	2011-03-14	PID106	ISO206	2011-02-16	Hospital A	Colonoscope	2011-02-19
+No Procedure Contact	PID108	ISO208	2011-04-01	Hospital A	OGD	2011-03-12	PID106	ISO206	2011-02-16	Hospital A	ERCP	2011-02-23
+No Procedure Contact	PID108	ISO208	2011-04-01	Hospital A	Colonoscope	2011-03-18	PID106	ISO206	2011-02-16	Hospital A	ERCP	2011-02-23
+Procedure Indirect	PID108	ISO208	2011-04-01	Hospital A	ERCP	2011-03-14	PID106	ISO206	2011-02-16	Hospital A	ERCP	2011-02-23
+No Procedure Contact	PID110	ISO210	2011-06-22	Hospital D	OGD	2011-06-18	PID107	ISO207	2011-03-08	Hospital C	Colonoscope	2011-03-08
+No Procedure Contact	PID110	ISO210	2011-06-22	Hospital D	OGD	2011-06-18	PID107	ISO207	2011-03-08	Hospital C	Appendicectomy	2011-03-10
