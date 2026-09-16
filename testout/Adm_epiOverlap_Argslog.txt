@@ -1,6 +1,0 @@
-isolate_DOC: ./data/real/inputs/Isolate_DOC_decimal.tsv
-isolate_patient_mapping: ./data/real/inputs/Isolate-patient_ID_mapping.tsv
-patient_admission_details: /home/mngs/GitHubRepos/epidemiological-overlap/data/real/inputs/Patient_admission_details.tsv
-isolate_pairs: ./data/real/inputs/Recipient-donor_isolate_pairs.tsv
-decimal_date: True
-output_folder: ./testout
