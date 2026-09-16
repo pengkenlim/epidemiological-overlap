@@ -3,19 +3,20 @@ Scripts to contextualize Enterobacterales isolate transmission linkages with pat
 
 Based on work to recreate analyses in [Whole genome sequencing reveals hidden transmission of carbapenemase-producing Enterobacterales](https://doi.org/10.1038/s41467-022-30637-5) and [Plasmid dynamics driving carbapenemase gene dissemination in healthcare environments: a nationwide analysis of closed Enterobacterales genomes](https://doi.org/10.1038/s41467-025-64515-7).
 
-Other sources of reference:
+Other source(s) of reference:
 https://github.com/nataschamay/cp_transmission_2021
 
 ## Overview
 
 This repository contains a small analysis workflow for comparing isolate pairs against patient metadata and generating epidemiological overlap outputs.
 
-There are two main workflow scripts:
+There are three main workflow scripts:
 
 - [tools/Address_epiOverlap.py](tools/Address_epiOverlap.py): compares isolate pairs by patient address information.
-- [tools/Discipline_epiOverlap.py](tools/Discipline_epiOverlap.py): compares isolate pairs by  discipline overlap between hospital stays of patients.
+- [tools/Discipline_epiOverlap.py](tools/Discipline_epiOverlap.py): compares isolate pairs by discipline overlap between hospital stays of patients.
+- [tools/Adm_epiOverlap.py](tools/Adm_epiOverlap.py): compares isolate pairs by hospital, ward, and bed overlap between hospital stays of patients.
 
-The repository also includes a small comparison workflow used to validate the discipline output against an independent reference set.
+The repository also includes comparison scripts used to validate the generated overlap outputs against independent reference sets.
 
 ## Environment setup
 
@@ -91,7 +92,40 @@ python ./tools/Discipline_epiOverlap.py \
   --decimal_date
 ```
 
-### Input and output files
+## Finding admission overlap
+
+### Check the CLI usage
+
+```bash
+python ./tools/Adm_epiOverlap.py --help
+```
+
+This shows the required arguments for the hospital, ward, and bed overlap analysis.
+
+### Run the analysis
+
+```bash
+python ./tools/Adm_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_admission_details ./data/demo/inputs/Patient_admission_details.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs
+```
+
+Optional decimal-date output:
+
+```bash
+python ./tools/Adm_epiOverlap.py \
+  --isolate_DOC ./data/demo/inputs/Isolate_DOC_decimal.tsv \
+  --isolate_patient_mapping ./data/demo/inputs/Isolate-patient_ID_mapping.tsv \
+  --patient_admission_details ./data/demo/inputs/Patient_admission_details.tsv \
+  --isolate_pairs ./data/demo/inputs/Recipient-donor_isolate_pairs.tsv \
+  --output_folder ./data/demo/outputs_decimal \
+  --decimal_date
+```
+
+### Input files
 
 The scripts read TSV files by column position, not by exact header names. For the default schema and detailed file descriptions, see:
 
@@ -100,10 +134,17 @@ The scripts read TSV files by column position, not by exact header names. For th
 - [Patient_addresses.tsv](data/README.md#patient_addressestsv)
 - [Patient_admission_details.tsv](data/README.md#patient_admission_detailstsv)
 - [Recipient-donor_isolate_pairs.tsv](data/README.md#recipient-donor_isolate_pairstsv)
+
+### Output files
+
+The scripts generate event and status tables in the output folder. See the detailed descriptions for:
+
 - [Address_epiOverlap_events.tsv](data/README.md#address_epioverlap_eventstsv)
 - [Address_epiOverlap_statuses_all_pairs.tsv](data/README.md#address_epioverlap_statuses_all_pairstsv)
 - [Discipline_epiOverlap_events.tsv](data/README.md#discipline_epioverlap_eventstsv)
 - [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
+- [Adm_epiOverlap_events.tsv](data/README.md#adm_epioverlap_eventstsv)
+- [Adm_epiOverlap_statuses_all_pairs.tsv](data/README.md#adm_epioverlap_statuses_all_pairstsv)
 
 ## Custom column order
 

@@ -7,6 +7,7 @@
 * Input for:
     * tools/Address_epiOverlap.py
     * tools/Discipline_epiOverlap.py
+    * tools/Adm_epiOverlap.py
 * Analogous to the `list_dateOfCulture` input text file accepted by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
 * Expected columns (by position):
     1. `Isolate_ID`
@@ -22,6 +23,7 @@
 * Input for:
     * tools/Address_epiOverlap.py
     * tools/Discipline_epiOverlap.py
+    * tools/Adm_epiOverlap.py
 * Analogous to the `list_capesID` input text file accepted by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
 * Expected columns (by position):
     1. `Isolate_ID`
@@ -51,6 +53,7 @@
     * A patient-level admission table containing age, sex, admission/discharge dates, hospital, ward, bed, and discipline overlap metadata used by the discipline workflow.
 * Input for:
     * tools/Discipline_epiOverlap.py
+    * tools/Adm_epiOverlap.py
 * Analogous to the `list_adm` input text file accepted by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
 * Expected columns (by position):
     1. `Patient_ID`
@@ -74,6 +77,7 @@
 * Input for:
     * tools/Address_epiOverlap.py
     * tools/Discipline_epiOverlap.py
+    * tools/Adm_epiOverlap.py
 * Analogous to the `list_glbtpairs` input text file accepted by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
 * Expected columns (by position):
     1. `Recip_isolate_ID`
@@ -86,13 +90,17 @@
 
 ### Address_epiOverlap_events.tsv
 * Description:
-    * Event-level record of the overlap type identified for each recipient-donor pair.
-    * It can include events such as postcode overlap or unit-number overlap.
+    * Event-level record between the recipient and donor of every isolate transmission-pair. 
 * Output yielded by:
     * tools/Address_epiOverlap.py
 * Analogous to the `EpiOverlap_Address_full` output text file yielded by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
 * Output columns:
     1. `Overlap_event_type`
+    * Possible values and their requirements:
+        * `POSTCODE` 
+            * Indicates that the recipient and donor share the same postal code.
+        * `UNIT_NUMBER`
+            * Indicates that the recipient and donor share the same unit number AND postal code.
     2. `Recip_patient_ID`
     3. `Donor_patient_ID`
     4. `Recip_patient_address_hash`
@@ -100,7 +108,7 @@
 
 ### Address_epiOverlap_statuses_all_pairs.tsv
 * Description:
-    * Pair-level summary of all isolate recipient/donor combinations and whether each pair overlaps by postal code and/or unit number.
+    * Pair-level summary of all isolate transmission-pairs and their address overlap status within the same hospital. 
 * Output yielded by:
     * tools/Address_epiOverlap.py
 * Analogous to the `EpiOverlap_Address_status` output text file yielded by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
@@ -110,16 +118,26 @@
     3. `Recip_patient_ID`
     4. `Donor_patient_ID`
     5. `Postal_code_overlap`
+        * `POSTCODE` if such event has been established.
     6. `Unit_number_overlap`
+        * `UNIT_NUMBER` if such event has been established.
 
 ### Discipline_epiOverlap_events.tsv
 * Description:
-    * Event-level record for each recipient-donor pair and stay combination where the same discipline and hospital overlap is observed.
-    * The event type distinguishes exact, partial, indirect, and no-contact relationships.
+    * Event-level record for all possible valid hospital stay combinations between the recipient and donor of every isolate transmission-pair. Recipient / donor stays are consider valid for a given isolate transmission-pair if stay falls within Risk Period.
 * Output yielded by:
     * tools/Discipline_epiOverlap.py
 * Output columns:
     1. `Overlap_event_type`
+    * Possible values and their requirements:
+        * `Discipline Direct (Exact)`
+            * Indicates that the recipient  and donor of the isolate transmission-pair share the exact overlaping stay period within the same discipline and hospital.
+        * `Discipline Direct`
+            * Indicates that the recipient  and donor of the isolate transmission-pair share an overlapping stay period within the same discipline and hospital. Mutually exclusve with `Discipline Direct (Exact)`.
+        * `Discipline Indirect`
+            * Indicates that the recipient  and donor of the isolate transmission-pair share an non-overlapping stay period within the same discipline and hospital. Stay of donor must preceed that of the recipient.
+        * `No Discipline Contact`
+            * Indicates that the recipient  and donor of the isolate transmission-pair either do not share stay period within the same discipline and hospital, or stay period of the recipient entirely precedes that of the donor.
     2. `Recip_patient_ID`
     3. `Recip_isolate_ID`
     4. `Recip_isolate_DOC`
@@ -149,7 +167,7 @@
 
 ### Discipline_epiOverlap_statuses_all_pairs.tsv
 * Description:
-    * Pair-level summary of all isolate recipient/donor combinations and whether each pair overlaps by discipline within the same hospital.
+    * Pair-level summary of all isolate transmission-pairs and their discipline overlap status within the same hospital. 
 * Output yielded by:
     * tools/Discipline_epiOverlap.py
 * Analogous to the `EpiOverlap_Adm_DiscSum` output text file yielded by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
@@ -159,16 +177,110 @@
     3. `Recip_patient_ID`
     4. `Donor_patient_ID`
     5. `Direct_exact_discipline_contact`
+        * `Discipline Direct (Exact)` if at least one such event is observed for the isolate transmission-pair.
     6. `Direct_partial_discipline_contact`
+        * `Discipline Direct` if at least one such event is observed for the isolate transmission-pair.
     7. `Indirect_discipline_contact`
+        * `Discipline Indirect` if at least one such event is observed for the isolate transmission-pair.
     8. `No_discipline_contact`
+        * `Discipline No Contact` if at least one such event is observed for the isolate transmission-pair.
     9. `Date_OOR`
+        * `Date_OOR` if at least one pair of recipient and donor stays is observed to be out of risk period overlap. More for trouble shooting and debugging purposes. An isolate-transmission pair with this status ONLY indicates that there are no valid stays within the risk period to determine contact.
 
-### Discipline_epiOverlap_Argslog.txt
+
+### Adm_epiOverlap_events.tsv
 * Description:
-    * A copy of the CLI arguments used to generate the discipline output files.
+    * Event-level record for all possible valid hospital stay combinations between the recipient and donor of every isolate transmission-pair. Recipient / donor stays are considered valid for a given isolate transmission-pair if stay falls within Risk Period.
 * Output yielded by:
-    * tools/Discipline_epiOverlap.py
-* Notes:
-    * This file records the input paths and the `--decimal_date` flag state for reproducibility.
+    * tools/Adm_epiOverlap.py
+* Output columns:
+    1. `Hospital_Overlap_event_type`
+    * Possible values and their requirements:
+        * `Hospital Direct (Exact)`
+            * Indicates that the recipient and donor of the isolate transmission-pair share the exact overlapping stay period within the same hospital.
+        * `Hospital Direct`
+            * Indicates that the recipient and donor of the isolate transmission-pair share an overlapping stay period within the same hospital. Mutually exclusive with `Hospital Direct (Exact)`.
+        * `Hospital Indirect`
+            * Indicates that the recipient and donor of the isolate transmission-pair share a non-overlapping stay period within the same hospital. Stay of donor must precede that of the recipient.
+        * `No Hospital Contact`
+            * Indicates that the recipient and donor of the isolate transmission-pair either do not share a stay period within the same hospital, or the stay period of the recipient entirely precedes that of the donor.
+    2. `Ward_Overlap_event_type`
+    * Possible values and their requirements:
+        * `Ward Direct (Exact)`
+            * Indicates that the recipient and donor of the isolate transmission-pair share the exact overlapping stay period within the same ward and hospital.
+        * `Ward Direct`
+            * Indicates that the recipient and donor of the isolate transmission-pair share an overlapping stay period within the same ward and hospital. Mutually exclusive with `Ward Direct (Exact)`.
+        * `Ward Indirect`
+            * Indicates that the recipient and donor of the isolate transmission-pair share a non-overlapping stay period within the same ward and hospital. Stay of donor must precede that of the recipient.
+        * `No Ward Contact`
+            * Indicates that the recipient and donor of the isolate transmission-pair either do not share a stay period within the same ward and hospital, or the stay period of the recipient entirely precedes that of the donor.
+    3. `Bed_Overlap_event_type`
+    * Possible values and their requirements:
+        * `Bed Direct (Exact)`
+            * Indicates that the recipient and donor of the isolate transmission-pair share the exact overlapping stay period within the same bed and hospital.
+        * `Bed Direct`
+            * Indicates that the recipient and donor of the isolate transmission-pair share an overlapping stay period within the same bed and hospital. Mutually exclusive with `Bed Direct (Exact)`.
+        * `Bed Indirect`
+            * Indicates that the recipient and donor of the isolate transmission-pair share a non-overlapping stay period within the same bed and hospital. Stay of donor must precede that of the recipient.
+        * `No Bed Contact`
+            * Indicates that the recipient and donor of the isolate transmission-pair either do not share a stay period within the same bed and hospital, or the stay period of the recipient entirely precedes that of the donor.
+    4. `Recip_patient_ID`
+    5. `Recip_isolate_ID`
+    6. `Recip_isolate_DOC`
+    7. `Recip_Age`
+    8. `Recip_Gender`
+    9. `Recip_Admission_date`
+    10. `Recip_Discharge_Date`
+    11. `Recip_Admission_Hospital`
+    12. `Recip_Ward`
+    13. `Recip_Bed`
+    14. `Recip_Discipline`
+    15. `Recip_start_date`
+    16. `Recip_end_date`
+    17. `Donor_patient_ID`
+    18. `Donor_isolate_ID`
+    19. `Donor_isolate_DOC`
+    20. `Donor_Age`
+    21. `Donor_Gender`
+    22. `Donor_Admission_date`
+    23. `Donor_Discharge_Date`
+    24. `Donor_Admission_Hospital`
+    25. `Donor_Ward`
+    26. `Donor_Bed`
+    27. `Donor_Discipline`
+    28. `Donor_start_date`
+    29. `Donor_end_date`
 
+### Adm_epiOverlap_statuses_all_pairs.tsv
+* Description:
+    * Pair-level summary of all isolate transmission-pairs and their hospital, ward, and bed overlap status within the same hospital.
+* Output yielded by:
+    * tools/Adm_epiOverlap.py
+* Analogous to the the combined information contained in the `EpiOverlap_Adm_HospSum`,  `EpiOverlap_Adm_WardSum` and `EpiOverlap_Adm_BedSum` output text files yielded by [cp_transmission_2021](https://github.com/nataschamay/cp_transmission_2021)
+* Output columns:
+    1. `Recip_isolate_ID`
+    2. `Donor_isolate_ID`
+    3. `Recip_patient_ID`
+    4. `Donor_patient_ID`
+    5. `Direct_exact_hospital_contact`
+        * `Hospital Direct (Exact)` if at least one such event is observed for the isolate transmission-pair.
+    6. `Direct_partial_hospital_contact`
+        * `Hospital Direct` if at least one such event is observed for the isolate transmission-pair.
+    7. `Indirect_hospital_contact`
+        * `Hospital Indirect` if at least one such event is observed for the isolate transmission-pair.
+    8. `No_hospital_contact`
+        * `No Hospital Contact` if at least one such event is observed for the isolate transmission-pair.
+    9. `Direct_exact_ward_contact`
+        * `Ward Direct (Exact)` if at least one such event is observed for the isolate transmission-pair.
+    10. `Direct_partial_ward_contact`
+        * `Ward Direct` if at least one such event is observed for the isolate transmission-pair.
+    11. `Indirect_ward_contact`
+        * `Ward Indirect` if at least one such event is observed for the isolate transmission-pair.
+    12. `No_ward_contact`
+        * `No Ward Contact` if at least one such event is observed for the isolate transmission-pair.
+    13. `Indirect_bed_contact`
+        * `Bed Indirect` if at least one such event is observed for the isolate transmission-pair.
+    14. `No_bed_contact`
+        * `No Bed Contact` if at least one such event is observed for the isolate transmission-pair.
+    15. `Date_OOR`
+        * `Date_OOR` if at least one pair of recipient and donor stays is observed to be out of risk period overlap. More for trouble shooting and debugging purposes. An isolate-transmission pair with this status ONLY indicates that there are no valid stays within the risk period to determine contact.

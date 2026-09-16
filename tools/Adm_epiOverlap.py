@@ -1,8 +1,8 @@
 """
-Discipline_epiOverlap.py.
+Adm_epiOverlap.py.
 
 Description:
-    Script for computing discipline epidemiological overlap based on patient admission data.
+    script for computing hospital, ward and bed epidemiological overlap based on patient admission data.
 
 Author:
     Peng Ken Lim
@@ -10,7 +10,7 @@ Author:
     MAI-Code-1.1-Flash
 
 Date updated:
-    2026-09-15
+    2026-09-16
 
 Running instructions:
     Create environment (if not already created):
@@ -68,12 +68,13 @@ Running instructions:
     Additionally, you can specify the columns explicitly (refer to usage information below).
 
     Command proper:
-        python ./tools/Discipline_epiOverlap.py [options]
+        python ./tools/Adm_epiOverlap.py [options]
         options:
             --isolate_DOC                 Path to the isolate Date-of-culture TSV. Expected column order: 1,2 --> Isolate_ID, Date of Culture (DOC)
             --isolate_patient_mapping     Path to the isolate-to-patient mapping TSV. Expected column order: 1,2 --> Isolate_ID, Patient_ID.
             --patient_admission_details   Path to the patient admission details TSV. Expected column order: 1,2,3,4,5,6,7,8,9,10,11 --> Patient_ID, Age, Gender, Admission Date, Discharge Date, Admission Hospital, Ward, Bed, Discipline, Start Date, Stop Date.
             --isolate_pairs               Path to the isolate pair TSV. Expected column order: 1,2 --> Recip_isolate_ID, Donor_isolate_ID.
+            --decimal_date                Write date outputs in decimal-year format instead of ISO YYYY-MM-DD.
             --output_folder               Path to the output directory for generated TSV files.
             --help                        Show this help message and exit.
 
@@ -277,8 +278,10 @@ def parse_date_string(date_str: str, slash_format: str | None = None, hyphen_for
 
     try:
         decimal_year = float(date_str)
-        if "." in date_str and not date_str.startswith(("+", "-")):
+        if not date_str.startswith(("+", "-")):
             year = int(decimal_year)
+            if "." not in date_str or decimal_year == float(year):
+                return ParsedDate(date(year, 1, 1), date_str)
             fraction = decimal_year - year
             leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
             days_in_year = 366 if leap_year else 365
@@ -327,15 +330,15 @@ def parse_date_string(date_str: str, slash_format: str | None = None, hyphen_for
 
 def build_parser() -> argparse.ArgumentParser:
     """
-    Construct the CLI argument parser for the discipline overlap workflow.
+    Construct the CLI argument parser for the hospital, ward, and bed overlap workflow.
 
     Returns:
         argparse.ArgumentParser: Configured parser for the workflow CLI.
     """
     parser = argparse.ArgumentParser(
         description=(
-            "Compute epidemiological overlap of isolate transmission based on "
-            "patient admission and discipline data.\n\n"
+            "Compute hospital, ward, and bed epidemiological overlap of isolate transmission "
+            "based on patient admission data.\n\n"
             "Expected column order (not exact header-name matching):\n"
             "  --isolate_DOC: Isolate_ID, Date of Culture (DOC)\n"
             "  --isolate_patient_mapping: Isolate_ID, Patient_ID\n"
@@ -748,11 +751,11 @@ def find_overlap_write_outputfiles(event_outpath, status_outpath,
                              isolate_pairs_recipientkey_dict,
                              decimal_output: bool = False):
     """
-    Detect Discipline overlaps and write the event and status TSV outputs.
+    Detect hospital, ward, and bed overlaps and write the event and status TSV outputs.
 
     The function compares recipient-donor isolate pairs, resolves each isolate to
     its patient and admission details, and writes a tab-delimited event log plus a summary
-    status table describing whether discipline-level overlaps occurred.
+    status table describing whether hospital, ward, and bed overlaps occurred.
 
     Args:
         event_outpath: Output path for the overlap event TSV.
@@ -771,7 +774,9 @@ def find_overlap_write_outputfiles(event_outpath, status_outpath,
         return _stringify_date_value(value, decimal_output)
 
     event_outfile_line_contents = ["\t".join([
-        "Overlap_event_type",
+        "Hospital_Overlap_event_type",
+        "Ward_Overlap_event_type",
+        "Bed_Overlap_event_type",
         "Recip_patient_ID", "Recip_isolate_ID",
         "Recip_isolate_DOC",
         "Recip_Age", "Recip_Gender", "Recip_Admission_date", "Recip_Discharge_Date",
@@ -785,10 +790,16 @@ def find_overlap_write_outputfiles(event_outpath, status_outpath,
     ])]
     status_outfile_line_contents = ["\t".join([
         "Recip_isolate_ID", "Donor_isolate_ID", "Recip_patient_ID", "Donor_patient_ID",
-        "Direct_exact_discipline_contact",
-        "Direct_partial_discipline_contact",
-        "Indirect_discipline_contact",
-        "No_discipline_contact",
+        "Direct_exact_hospital_contact",
+        "Direct_partial_hospital_contact",
+        "Indirect_hospital_contact",
+        "No_hospital_contact",
+        "Direct_exact_ward_contact",
+        "Direct_partial_ward_contact",
+        "Indirect_ward_contact",
+        "No_ward_contact",
+        "Indirect_bed_contact",
+        "No_bed_contact",
         "Date_OOR"
     ])]
 
@@ -802,18 +813,24 @@ def find_overlap_write_outputfiles(event_outpath, status_outpath,
             recipient_admission_details = patient_admission_dict.get(recipient_patient_id, [])
             recipient_isolate_DOC = isolate_DOC_dict.get(recipient_isolate_id)
 
-            discipline_contact_direct_exact = False
-            discipline_contact_direct_partial = False
-            discipline_contact_indirect = False
-            discipline_no_contact = False
-            date_oor = False
+            pair_Direct_exact_hospital_contact = False
+            pair_Direct_partial_hospital_contact = False
+            pair_Indirect_hospital_contact = False
+            pair_No_hospital_contact = False
+            pair_Direct_exact_ward_contact = False
+            pair_Direct_partial_ward_contact = False
+            pair_Indirect_ward_contact = False
+            pair_No_ward_contact = False
+            pair_Indirect_bed_contact = False
+            pair_No_bed_contact = False
+            Date_OOR = False
 
             for donor_stay_admission_details in donor_admission_details:
                 donor_stay_start = parse_date_string(donor_stay_admission_details.get("Start Date"))
                 donor_stay_end = parse_date_string(donor_stay_admission_details.get("Stop Date"))
                 donor_clipped = clip_donor_interval(donor_stay_start, donor_stay_end, donor_isolate_DOC, recipient_isolate_DOC)
                 if donor_clipped is None:
-                    date_oor = True
+                    Date_OOR = True
                     continue
 
                 donor_stay_start_clipped, donor_stay_stop_clipped = donor_clipped
@@ -823,181 +840,118 @@ def find_overlap_write_outputfiles(event_outpath, status_outpath,
                     recipient_stay_end = parse_date_string(recipient_stay_admission_details.get("Stop Date"))
                     recipient_clipped = clip_recipient_interval(recipient_stay_start, recipient_stay_end, donor_isolate_DOC, recipient_isolate_DOC)
                     if recipient_clipped is None:
-                        date_oor = True
+                        Date_OOR = True
                         continue
 
                     recipient_stay_start_clipped, recipient_stay_stop_clipped = recipient_clipped
 
-                    if (
-                        donor_stay_admission_details.get("Admission Hospital") == recipient_stay_admission_details.get("Admission Hospital")
-                        and donor_stay_admission_details.get("Discipline") == recipient_stay_admission_details.get("Discipline")
-                    ):
+                    Hospital_Overlap_event_type = "No Hospital Contact"
+                    Ward_Overlap_event_type = "No Ward Contact"
+                    Bed_Overlap_event_type = "No Bed Contact"
+
+                    if recipient_stay_admission_details.get("Admission Hospital") == donor_stay_admission_details.get("Admission Hospital"):
                         if donor_stay_start_clipped == recipient_stay_start_clipped and donor_stay_stop_clipped == recipient_stay_stop_clipped:
-                            discipline_contact_direct_exact = True
-                            event_outfile_line_contents.append("\t".join([
-                                "Discipline Direct (Exact)",
-                                format_output_value(recipient_patient_id),
-                                format_output_value(recipient_isolate_id),
-                                format_output_value(recipient_isolate_DOC),
-                                format_output_value(recipient_stay_admission_details.get("Age", "")),
-                                format_output_value(recipient_stay_admission_details.get("Gender", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(recipient_stay_admission_details.get("Ward", "")),
-                                format_output_value(recipient_stay_admission_details.get("Bed", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discipline", "")),
-                                format_output_value(recipient_stay_admission_details.get("Start Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
-                                format_output_value(donor_patient_id),
-                                format_output_value(donor_isolate_id),
-                                format_output_value(donor_isolate_DOC),
-                                format_output_value(donor_stay_admission_details.get("Age", "")),
-                                format_output_value(donor_stay_admission_details.get("Gender", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(donor_stay_admission_details.get("Ward", "")),
-                                format_output_value(donor_stay_admission_details.get("Bed", "")),
-                                format_output_value(donor_stay_admission_details.get("Discipline", "")),
-                                format_output_value(donor_stay_admission_details.get("Start Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Stop Date", "")),
-                            ]))
+                            pair_Direct_exact_hospital_contact = True
+                            Hospital_Overlap_event_type = "Hospital Direct (Exact)"
+                            if recipient_stay_admission_details.get("Ward") == donor_stay_admission_details.get("Ward"):
+                                pair_Direct_exact_ward_contact = True
+                                Ward_Overlap_event_type = "Ward Direct (Exact)"
+                            else:
+                                pair_No_ward_contact = True
+                                Ward_Overlap_event_type = "No Ward Contact"
+                            pair_No_bed_contact = True
+                            Bed_Overlap_event_type = "No Bed Contact"
                         elif donor_stay_start_clipped <= recipient_stay_stop_clipped and donor_stay_stop_clipped >= recipient_stay_start_clipped:
-                            discipline_contact_direct_partial = True
-                            event_outfile_line_contents.append("\t".join([
-                                "Discipline Direct",
-                                format_output_value(recipient_patient_id),
-                                format_output_value(recipient_isolate_id),
-                                format_output_value(recipient_isolate_DOC),
-                                format_output_value(recipient_stay_admission_details.get("Age", "")),
-                                format_output_value(recipient_stay_admission_details.get("Gender", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(recipient_stay_admission_details.get("Ward", "")),
-                                format_output_value(recipient_stay_admission_details.get("Bed", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discipline", "")),
-                                format_output_value(recipient_stay_admission_details.get("Start Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
-                                format_output_value(donor_patient_id),
-                                format_output_value(donor_isolate_id),
-                                format_output_value(donor_isolate_DOC),
-                                format_output_value(donor_stay_admission_details.get("Age", "")),
-                                format_output_value(donor_stay_admission_details.get("Gender", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(donor_stay_admission_details.get("Ward", "")),
-                                format_output_value(donor_stay_admission_details.get("Bed", "")),
-                                format_output_value(donor_stay_admission_details.get("Discipline", "")),
-                                format_output_value(donor_stay_admission_details.get("Start Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Stop Date", "")),
-                            ]))
-                        elif donor_stay_stop_clipped < recipient_stay_start_clipped: #donor stay cannot be before recipient stay
-                            discipline_contact_indirect = True
-                            event_outfile_line_contents.append("\t".join([
-                                "Discipline Indirect",
-                                format_output_value(recipient_patient_id),
-                                format_output_value(recipient_isolate_id),
-                                format_output_value(recipient_isolate_DOC),
-                                format_output_value(recipient_stay_admission_details.get("Age", "")),
-                                format_output_value(recipient_stay_admission_details.get("Gender", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(recipient_stay_admission_details.get("Ward", "")),
-                                format_output_value(recipient_stay_admission_details.get("Bed", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discipline", "")),
-                                format_output_value(recipient_stay_admission_details.get("Start Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
-                                format_output_value(donor_patient_id),
-                                format_output_value(donor_isolate_id),
-                                format_output_value(donor_isolate_DOC),
-                                format_output_value(donor_stay_admission_details.get("Age", "")),
-                                format_output_value(donor_stay_admission_details.get("Gender", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(donor_stay_admission_details.get("Ward", "")),
-                                format_output_value(donor_stay_admission_details.get("Bed", "")),
-                                format_output_value(donor_stay_admission_details.get("Discipline", "")),
-                                format_output_value(donor_stay_admission_details.get("Start Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Stop Date", "")),
-                            ]))
-                        else:
-                            discipline_no_contact = True
-                            event_outfile_line_contents.append("\t".join([
-                                "No Discipline Contact",
-                                format_output_value(recipient_patient_id),
-                                format_output_value(recipient_isolate_id),
-                                format_output_value(recipient_isolate_DOC),
-                                format_output_value(recipient_stay_admission_details.get("Age", "")),
-                                format_output_value(recipient_stay_admission_details.get("Gender", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(recipient_stay_admission_details.get("Ward", "")),
-                                format_output_value(recipient_stay_admission_details.get("Bed", "")),
-                                format_output_value(recipient_stay_admission_details.get("Discipline", "")),
-                                format_output_value(recipient_stay_admission_details.get("Start Date", "")),
-                                format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
-                                format_output_value(donor_patient_id),
-                                format_output_value(donor_isolate_id),
-                                format_output_value(donor_isolate_DOC),
-                                format_output_value(donor_stay_admission_details.get("Age", "")),
-                                format_output_value(donor_stay_admission_details.get("Gender", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
-                                format_output_value(donor_stay_admission_details.get("Ward", "")),
-                                format_output_value(donor_stay_admission_details.get("Bed", "")),
-                                format_output_value(donor_stay_admission_details.get("Discipline", "")),
-                                format_output_value(donor_stay_admission_details.get("Start Date", "")),
-                                format_output_value(donor_stay_admission_details.get("Stop Date", "")),
-                            ]))
-                    else:
-                        discipline_no_contact = True
-                        event_outfile_line_contents.append("\t".join([
-                            "No Discipline Contact",
-                            format_output_value(recipient_patient_id),
-                            format_output_value(recipient_isolate_id),
-                            format_output_value(recipient_isolate_DOC),
-                            format_output_value(recipient_stay_admission_details.get("Age", "")),
-                            format_output_value(recipient_stay_admission_details.get("Gender", "")),
-                            format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
-                            format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
-                            format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
-                            format_output_value(recipient_stay_admission_details.get("Ward", "")),
-                            format_output_value(recipient_stay_admission_details.get("Bed", "")),
-                            format_output_value(recipient_stay_admission_details.get("Discipline", "")),
-                            format_output_value(recipient_stay_admission_details.get("Start Date", "")),
-                            format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
-                            format_output_value(donor_patient_id),
-                            format_output_value(donor_isolate_id),
-                            format_output_value(donor_isolate_DOC),
-                            format_output_value(donor_stay_admission_details.get("Age", "")),
-                            format_output_value(donor_stay_admission_details.get("Gender", "")),
-                            format_output_value(donor_stay_admission_details.get("Admission Date", "")),
-                            format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
-                            format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
-                            format_output_value(donor_stay_admission_details.get("Ward", "")),
-                            format_output_value(donor_stay_admission_details.get("Bed", "")),
-                            format_output_value(donor_stay_admission_details.get("Discipline", "")),
-                            format_output_value(donor_stay_admission_details.get("Start Date", "")),
-                            format_output_value(donor_stay_admission_details.get("Stop Date", "")),
-                        ]))
+                            pair_Direct_partial_hospital_contact = True
+                            Hospital_Overlap_event_type = "Hospital Direct"
+                            if recipient_stay_admission_details.get("Ward") == donor_stay_admission_details.get("Ward"):
+                                pair_Direct_partial_ward_contact = True
+                                Ward_Overlap_event_type = "Ward Direct"
+                            else:
+                                pair_No_ward_contact = True
+                                Ward_Overlap_event_type = "No Ward Contact"
+                            pair_No_bed_contact = True
+                            Bed_Overlap_event_type = "No Bed Contact"
+                        elif donor_stay_stop_clipped < recipient_stay_start_clipped: 
+                            pair_Indirect_hospital_contact = True
+                            Hospital_Overlap_event_type = "Hospital Indirect"
+                            if recipient_stay_admission_details.get("Ward") == donor_stay_admission_details.get("Ward"):
+                                pair_Indirect_ward_contact = True
+                                Ward_Overlap_event_type = "Ward Indirect"
+                                if recipient_stay_admission_details.get("Bed") == donor_stay_admission_details.get("Bed"):
+                                    pair_Indirect_bed_contact = True
+                                    Bed_Overlap_event_type = "Bed Indirect"
+                                else:
+                                    pair_No_bed_contact = True
+                                    Bed_Overlap_event_type = "No Bed Contact"
+                            else:
+                                pair_No_ward_contact = True
+                                Ward_Overlap_event_type = "No Ward Contact"
+                                pair_No_bed_contact = True
+                                Bed_Overlap_event_type = "No Bed Contact"
+                        else: # no temporal overlap AND recipient stay is before donor stay
+                            pair_No_hospital_contact = True
+                            Hospital_Overlap_event_type = "No Hospital Contact"
+                            pair_No_ward_contact = True
+                            Ward_Overlap_event_type = "No Ward Contact"
+                            pair_No_bed_contact = True
+                            Bed_Overlap_event_type = "No Bed Contact"
+                    else: # hospital not the same
+                        pair_No_hospital_contact = True
+                        Hospital_Overlap_event_type = "No Hospital Contact"
+                        pair_No_ward_contact = True
+                        Ward_Overlap_event_type = "No Ward Contact"
+                        pair_No_bed_contact = True
+                        Bed_Overlap_event_type = "No Bed Contact"
+
+                    event_outfile_line_contents.append("\t".join([
+                        Hospital_Overlap_event_type,
+                        Ward_Overlap_event_type,
+                        Bed_Overlap_event_type,
+                        format_output_value(recipient_patient_id),
+                        format_output_value(recipient_isolate_id),
+                        format_output_value(recipient_isolate_DOC),
+                        format_output_value(recipient_stay_admission_details.get("Age", "")),
+                        format_output_value(recipient_stay_admission_details.get("Gender", "")),
+                        format_output_value(recipient_stay_admission_details.get("Admission Date", "")),
+                        format_output_value(recipient_stay_admission_details.get("Discharge Date", "")),
+                        format_output_value(recipient_stay_admission_details.get("Admission Hospital", "")),
+                        format_output_value(recipient_stay_admission_details.get("Ward", "")),
+                        format_output_value(recipient_stay_admission_details.get("Bed", "")),
+                        format_output_value(recipient_stay_admission_details.get("Discipline", "")),
+                        format_output_value(recipient_stay_admission_details.get("Start Date", "")),
+                        format_output_value(recipient_stay_admission_details.get("Stop Date", "")),
+                        format_output_value(donor_patient_id),
+                        format_output_value(donor_isolate_id),
+                        format_output_value(donor_isolate_DOC),
+                        format_output_value(donor_stay_admission_details.get("Age", "")),
+                        format_output_value(donor_stay_admission_details.get("Gender", "")),
+                        format_output_value(donor_stay_admission_details.get("Admission Date", "")),
+                        format_output_value(donor_stay_admission_details.get("Discharge Date", "")),
+                        format_output_value(donor_stay_admission_details.get("Admission Hospital", "")),
+                        format_output_value(donor_stay_admission_details.get("Ward", "")),
+                        format_output_value(donor_stay_admission_details.get("Bed", "")),
+                        format_output_value(donor_stay_admission_details.get("Discipline", "")),
+                        format_output_value(donor_stay_admission_details.get("Start Date", "")),
+                        format_output_value(donor_stay_admission_details.get("Stop Date", "")),
+                    ]))
 
             status_outfile_line_contents.append("\t".join([
                 format_output_value(recipient_isolate_id),
                 format_output_value(donor_isolate_id),
                 format_output_value(recipient_patient_id),
                 format_output_value(donor_patient_id),
-                "Discipline Direct (Exact)" if discipline_contact_direct_exact else "",
-                "Discipline Direct" if discipline_contact_direct_partial else "",
-                "Discipline Indirect" if discipline_contact_indirect else "",
-                "No Discipline Contact" if discipline_no_contact else "",
-                "Date_OOR" if date_oor else "",
+                "Hospital Direct (Exact)" if pair_Direct_exact_hospital_contact else "",
+                "Hospital Direct" if pair_Direct_partial_hospital_contact else "",
+                "Hospital Indirect" if pair_Indirect_hospital_contact else "",
+                "No Hospital Contact" if pair_No_hospital_contact else "",
+                "Ward Direct (Exact)" if pair_Direct_exact_ward_contact else "",
+                "Ward Direct" if pair_Direct_partial_ward_contact else "",
+                "Ward Indirect" if pair_Indirect_ward_contact else "",
+                "No Ward Contact" if pair_No_ward_contact else "",
+                "Bed Indirect" if pair_Indirect_bed_contact else "",
+                "No Bed Contact" if pair_No_bed_contact else "",
+                "Date_OOR" if Date_OOR else "",
             ]))
 
     with open(event_outpath, "w", encoding="utf-8") as event_handle:
@@ -1012,7 +966,7 @@ def main() -> int:
     Execute the epidemiological overlap workflow from the command line.
 
     This function parses the required arguments, loads the input TSV files,
-    computes postcode and unit overlaps between pairs of isolates, and writes the
+    computes hospital, ward, and bed overlaps between pairs of isolates, and writes the
     output files to the requested folder.
 
     Returns:
@@ -1035,10 +989,10 @@ def main() -> int:
     isolate_pairs_donorkey_dict, isolate_pairs_recipientkey_dict = parse_isolate_pairs(args.isolate_pairs)
 
     os.makedirs(args.output_folder, exist_ok=True)
-    event_outpath = os.path.join(args.output_folder, "Discipline_epiOverlap_events.tsv")
-    status_outpath = os.path.join(args.output_folder, "Discipline_epiOverlap_statuses_all_pairs.tsv")
+    event_outpath = os.path.join(args.output_folder, "Adm_epiOverlap_events.tsv")
+    status_outpath = os.path.join(args.output_folder, "Adm_epiOverlap_statuses_all_pairs.tsv")
 
-    with open(os.path.join(args.output_folder, "Discipline_epiOverlap_Argslog.txt"), "w", encoding="utf-8") as arg_outfile:
+    with open(os.path.join(args.output_folder, "Adm_epiOverlap_Argslog.txt"), "w", encoding="utf-8") as arg_outfile:
         arg_outfile.write(f"isolate_DOC: {args.isolate_DOC}\n")
         arg_outfile.write(f"isolate_patient_mapping: {args.isolate_patient_mapping}\n")
         arg_outfile.write(f"patient_admission_details: {args.patient_admission_details}\n")

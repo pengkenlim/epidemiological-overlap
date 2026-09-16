@@ -1,8 +1,8 @@
 """
-Discipline_epiOverlap_test.py.
+Adm_epiOverlap_test.py.
 
 Description:
-    Regression tests for the discipline epidemiological overlap workflow.
+    Regression tests for the admission epidemiological overlap workflow.
     These checks compare the generated outputs against the tracked demo data,
     and against the local real-data reference outputs when available.
 
@@ -20,11 +20,13 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "tools" / "Discipline_epiOverlap.py"
+SCRIPT_PATH = REPO_ROOT / "tools" / "Adm_epiOverlap.py"
 DEMO_INPUTS_DIR = REPO_ROOT / "data" / "demo" / "inputs"
 DEMO_OUTPUTS_DIR = REPO_ROOT / "data" / "demo" / "outputs"
 REAL_INPUTS_DIR = REPO_ROOT / "data" / "real" / "inputs"
 REAL_OUTPUTS_DIR = REPO_ROOT / "data" / "real" / "outputs"
+REAL_ADMISSION_EVENTS_REFERENCE = REAL_OUTPUTS_DIR / "Adm_epiOverlap_events.tsv"
+REAL_ADMISSION_STATUS_REFERENCE = REAL_OUTPUTS_DIR / "Adm_epiOverlap_statuses_all_pairs.tsv"
 
 
 def _normalize_row(line: str) -> tuple[str, ...]:
@@ -40,7 +42,7 @@ def _read_rows_as_set(path: Path) -> set[tuple[str, ...]]:
             stripped = line.strip()
             if not stripped:
                 continue
-            if stripped.startswith("Overlap_event_type") or stripped.startswith("Recip_isolate_ID"):
+            if stripped.startswith("Hospital_Overlap_event_type") or stripped.startswith("Recip_isolate_ID"):
                 continue
             rows.add(_normalize_row(stripped))
     return rows
@@ -83,31 +85,28 @@ def test_demo_dataset_matches_tracked_outputs(tmp_path: Path) -> None:
         output_dir,
     )
 
-    generated_events = _read_rows_as_set(output_dir / "Discipline_epiOverlap_events.tsv")
-    expected_events = _read_rows_as_set(DEMO_OUTPUTS_DIR / "Discipline_epiOverlap_events.tsv")
+    generated_events = _read_rows_as_set(output_dir / "Adm_epiOverlap_events.tsv")
+    expected_events = _read_rows_as_set(DEMO_OUTPUTS_DIR / "Adm_epiOverlap_events.tsv")
     assert generated_events == expected_events
 
-    generated_status = _read_rows_as_set(
-        output_dir / "Discipline_epiOverlap_statuses_all_pairs.tsv"
-    )
-    expected_status = _read_rows_as_set(
-        DEMO_OUTPUTS_DIR / "Discipline_epiOverlap_statuses_all_pairs.tsv"
-    )
+    generated_status = _read_rows_as_set(output_dir / "Adm_epiOverlap_statuses_all_pairs.tsv")
+    expected_status = _read_rows_as_set(DEMO_OUTPUTS_DIR / "Adm_epiOverlap_statuses_all_pairs.tsv")
     assert generated_status == expected_status
 
     assert any(
-        row[0] == "Discipline Indirect" and row[1] == "PID108" and row[2] == "ISO208"
+        row[0] == "Hospital Indirect" and row[3] == "PID108" and row[4] == "ISO208"
         for row in generated_events
     )
     assert any(
-        row[0] == "No Discipline Contact" and row[1] == "PID110" and row[2] == "ISO210"
+        row[0] == "No Hospital Contact" and row[3] == "PID110" and row[4] == "ISO210"
         for row in generated_events
     )
 
 
-def test_real_dataset_matches_local_outputs_if_available(tmp_path: Path) -> None:
+def test_real_dataset_matches_local_reference_if_available(tmp_path: Path) -> None:
     assert REAL_INPUTS_DIR.exists(), "Real input directory is not present locally."
-    assert REAL_OUTPUTS_DIR.exists(), "Real output directory is not present locally."
+    assert REAL_ADMISSION_EVENTS_REFERENCE.exists(), "Real admission event reference is not present locally."
+    assert REAL_ADMISSION_STATUS_REFERENCE.exists(), "Real admission status reference is not present locally."
 
     output_dir = tmp_path / "real_generated_output"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -119,48 +118,10 @@ def test_real_dataset_matches_local_outputs_if_available(tmp_path: Path) -> None
         decimal_output=True,
     )
 
-    generated_events = _read_rows_as_set(output_dir / "Discipline_epiOverlap_events.tsv")
-    expected_events = _read_rows_as_set(REAL_OUTPUTS_DIR / "Discipline_epiOverlap_events.tsv")
+    generated_events = _read_rows_as_set(output_dir / "Adm_epiOverlap_events.tsv")
+    expected_events = _read_rows_as_set(REAL_ADMISSION_EVENTS_REFERENCE)
     assert generated_events == expected_events
 
-    generated_status = _read_rows_as_set(
-        output_dir / "Discipline_epiOverlap_statuses_all_pairs.tsv"
-    )
-    expected_status = _read_rows_as_set(
-        REAL_OUTPUTS_DIR / "Discipline_epiOverlap_statuses_all_pairs.tsv"
-    )
+    generated_status = _read_rows_as_set(output_dir / "Adm_epiOverlap_statuses_all_pairs.tsv")
+    expected_status = _read_rows_as_set(REAL_ADMISSION_STATUS_REFERENCE)
     assert generated_status == expected_status
-
-
-@pytest.mark.parametrize(
-    "variant_path",
-    sorted((REAL_INPUTS_DIR / "date_format_variants").glob("Isolate_DOC*.tsv")),
-    ids=lambda p: p.name,
-)
-def test_discipline_epi_overlap_matches_expected_output_for_each_real_doc_variant(
-    tmp_path: Path,
-    variant_path: Path,
-) -> None:
-    if not REAL_INPUTS_DIR.exists():
-        pytest.skip("Real dataset not available in this workspace.")
-
-    variant_dir = REAL_INPUTS_DIR / "date_format_variants"
-    if not variant_dir.exists():
-        pytest.skip("Variant inputs are not present locally.")
-
-    output_dir = tmp_path / variant_path.stem
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    _run_script_for_variant(
-        variant_path,
-        REAL_INPUTS_DIR,
-        output_dir,
-        decimal_output=True,
-    )
-
-    events_path = output_dir / "Discipline_epiOverlap_events.tsv"
-    status_path = output_dir / "Discipline_epiOverlap_statuses_all_pairs.tsv"
-    assert events_path.exists(), f"Discipline variant output was not created: {events_path}"
-    assert status_path.exists(), f"Discipline variant status output was not created: {status_path}"
-    assert len(_read_rows_as_set(events_path)) > 0
-    assert len(_read_rows_as_set(status_path)) > 0
