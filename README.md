@@ -112,9 +112,10 @@ python ./tools/Address_epiOverlap.py \
 
 This writes files such as:
 
-- `Address_epiOverlap_events.tsv`
-- `Address_epiOverlap_statuses_all_pairs.tsv`
-- `Address_epiOverlap_Argslog.txt`
+- [Address_epiOverlap_events.tsv](data/README.md#address_epioverlap_eventstsv)
+- [Address_epiOverlap_statuses_all_pairs.tsv](data/README.md#address_epioverlap_statuses_all_pairstsv)
+- Address_epiOverlap_Argslog.txt
+  - log file containing the command-line arguments and execution details.
 
 into the output folder you specify.
 
@@ -150,6 +151,14 @@ python ./tools/Discipline_epiOverlap.py \
   --output_folder ./data/demo/outputs_decimal \
   --decimal_date
 ```
+This writes files such as:
+
+- [Discipline_epiOverlap_events.tsv](data/README.md#discipline_epioverlap_eventstsv)
+- [Discipline_epiOverlap_statuses_all_pairs.tsv](data/README.md#discipline_epioverlap_statuses_all_pairstsv)
+- Discipline_epiOverlap_Argslog.txt
+  - log file containing the command-line arguments and execution details.
+
+into the output folder you specify.
 
 ## Finding admission overlap
 
@@ -184,6 +193,15 @@ python ./tools/Adm_epiOverlap.py \
   --decimal_date
 ```
 
+This writes files such as:
+
+- [Adm_epiOverlap_events.tsv](data/README.md#adm_epioverlap_eventstsv)
+- [Adm_epiOverlap_statuses_all_pairs.tsv](data/README.md#adm_epioverlap_statuses_all_pairstsv)
+- Adm_epiOverlap_Argslog.txt
+  - log file containing the command-line arguments and execution details.
+
+into the output folder you specify.
+
 ## Finding procedure overlap
 
 ### Check the CLI usage
@@ -216,6 +234,14 @@ python ./tools/Procedure_epiOverlap.py \
   --output_folder ./data/demo/outputs_decimal \
   --decimal_date
 ```
+This writes files such as:
+
+- [Procedure_epiOverlap_events.tsv](data/README.md#procedure_epioverlap_eventstsv)
+- [Procedure_epiOverlap_statuses_all_pairs.tsv](data/README.md#procedure_epioverlap_statuses_all_pairstsv)
+- Procedure_epiOverlap_Argslog.txt
+  - log file containing the command-line arguments and execution details.
+
+into the output folder you specify.
 
 ## Custom column order
 
